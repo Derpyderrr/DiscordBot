@@ -1,17 +1,19 @@
-const { SlashCommandBuilder, PermissionsBitField } = require('discord.js');
-const { logAndReplyError } = require('../utils/errorLogger');
-const { hasPermission } = require('../utils/checkPermissions');
+const { SlashCommandBuilder } = require('@discordjs/builders');
 
 module.exports = {
     data: new SlashCommandBuilder()
         .setName('setroles')
-        .setDescription('Sets up default roles in the server.'),
+        .setDescription('Sets up basic roles in the server.'),
     async execute(interaction) {
+        const guild = interaction.guild;
+
+        if (!guild) {
+            return await interaction.reply({ content: 'This command must be run in a server.', ephemeral: true });
+        }
+
         try {
-            if (!hasPermission(interaction.member, 'ManageRoles')) {
-                await interaction.reply({ content: 'You do not have permission to manage roles.', ephemeral: true });
-                return;
-            }
+            // Properly defer the reply to avoid the 3-second timeout
+            await interaction.deferReply({ ephemeral: true });
 
             const roles = [
                 { name: 'Member', color: 'BLUE' },
@@ -19,21 +21,28 @@ module.exports = {
                 { name: 'Admin', color: 'RED' },
             ];
 
-            await interaction.reply('Setting up roles...');
             for (const role of roles) {
-                const existingRole = interaction.guild.roles.cache.find(r => r.name === role.name);
-                if (existingRole) continue;
+                const existingRole = guild.roles.cache.find(r => r.name === role.name);
+                if (existingRole) {
+                    console.log(`Role "${role.name}" already exists.`);
+                    continue;
+                }
 
-                await interaction.guild.roles.create({
+                await guild.roles.create({
                     name: role.name,
                     color: role.color,
-                    reason: 'Default role setup',
+                    reason: 'Basic role setup',
                 });
+                console.log(`Role "${role.name}" created.`);
             }
 
-            await interaction.followUp('Roles have been set up successfully!');
+            // Edit the deferred reply to indicate success
+            await interaction.editReply('Basic roles have been set up successfully!');
         } catch (error) {
-            await logAndReplyError(error, interaction);
+            console.error('Error in /setroles command:', error);
+
+            // Edit the deferred reply to indicate failure
+            await interaction.editReply('An error occurred while setting up roles. Please check the bot\'s permissions.');
         }
     },
 };

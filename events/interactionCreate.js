@@ -1,23 +1,27 @@
-const { logError } = require('../utils/logger');
-const { checkCooldown } = require('../utils/cooldowns');
-
 module.exports = {
     name: 'interactionCreate',
     async execute(interaction, client) {
         if (!interaction.isCommand()) return;
 
         const command = client.commands.get(interaction.commandName);
-        if (!command) return;
+
+        if (!command) {
+            console.error(`No command matching ${interaction.commandName} was found.`);
+            return;
+        }
 
         try {
-            if (!checkCooldown(client, interaction)) return;
-            await command.execute(interaction);
+            // Execute the command
+            await command.execute(interaction, client);
         } catch (error) {
-            logError(error, interaction.commandName);
-            await interaction.reply({
-                content: 'There was an error executing this command.',
-                ephemeral: true,
-            });
+            console.error(`Error executing command ${interaction.commandName}:`, error);
+
+            // Safely reply to the interaction to avoid "Unknown interaction"
+            if (interaction.deferred || interaction.replied) {
+                await interaction.followUp({ content: 'There was an error while executing this command!', ephemeral: true });
+            } else {
+                await interaction.reply({ content: 'There was an error while executing this command!', ephemeral: true });
+            }
         }
     },
 };

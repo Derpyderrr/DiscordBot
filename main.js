@@ -1,19 +1,17 @@
-const { Client, GatewayIntentBits, Collection } = require('discord.js');
+const { Client, GatewayIntentBits, Collection, ActivityType } = require('discord.js');
 const fs = require('fs');
-require('dotenv').config(); // Load environment variables
-const config = {
-    botToken: process.env.BOT_TOKEN,
-    clientId: process.env.CLIENT_ID,
-    ownerId: process.env.OWNER_ID,
-    dbPath: './database/db.sqlite', // Adjust this path as needed
-};
+const path = require('path');
+const dotenv = require('dotenv');
+
+// Load environment variables
+dotenv.config();
+
+// Import utility modules
+const { logError } = require('./utils/logger');
 const { setupDatabase } = require('./utils/database');
+const { errorHandler } = require('./utils/errorHandler');
 
-if (!config.botToken) {
-    console.error('ERROR: Bot token is missing in the configuration.');
-    process.exit(1);
-}
-
+// Create a new Discord client
 const client = new Client({
     intents: [
         GatewayIntentBits.Guilds,
@@ -22,79 +20,56 @@ const client = new Client({
     ],
 });
 
+// Collections for commands and cooldowns
 client.commands = new Collection();
+client.cooldowns = new Collection();
 
 // Load commands dynamically
-const commandFiles = fs.readdirSync('./commands').filter(file => file.endsWith('.js'));
+const commandsPath = path.join(__dirname, 'commands');
+const commandFiles = fs.readdirSync(commandsPath).filter(file => file.endsWith('.js'));
 for (const file of commandFiles) {
-    try {
-        const command = require(`./commands/${file}`);
-        if (!command.data?.name) {
-            console.warn(`The command file "${file}" is missing a "data.name" property.`);
-            continue;
-        }
-        client.commands.set(command.data.name, command);
-    } catch (error) {
-        console.error(`Error loading command file "${file}":`, error);
-    }
+    const command = require(path.join(commandsPath, file));
+    client.commands.set(command.data.name, command);
 }
 
 // Load events dynamically
-const eventFiles = fs.readdirSync('./events').filter(file => file.endsWith('.js'));
+const eventsPath = path.join(__dirname, 'events');
+const eventFiles = fs.readdirSync(eventsPath).filter(file => file.endsWith('.js'));
 for (const file of eventFiles) {
-    try {
-        const event = require(`./events/${file}`);
-        const eventName = file.split('.')[0];
-        if (event.once) {
-            client.once(eventName, (...args) => event.execute(...args, client));
-        } else {
-            client.on(eventName, (...args) => event.execute(...args, client));
-        }
-    } catch (error) {
-        console.error(`Error loading event file "${file}":`, error);
-    }
+    const event = require(path.join(eventsPath, file));
+    const eventName = event.name || file.split('.')[0];
+    client.on(eventName, (...args) => event.execute(...args, client));
 }
 
-// Handle interactions
-client.on('interactionCreate', async (interaction) => {
-    if (!interaction.isCommand()) return;
+// Initialize the database
+setupDatabase(process.env.DB_PATH || './database/db.sqlite');
 
-    const command = client.commands.get(interaction.commandName);
-
-    if (!command) {
-        await interaction.reply({ content: 'Command not found.', ephemeral: true });
-        return;
-    }
-
-    try {
-        await command.execute(interaction);
-    } catch (error) {
-        console.error(`Error executing command "${interaction.commandName}":`, error);
-        await interaction.reply({ content: 'There was an error executing this command.', ephemeral: true });
-    }
-});
-
+// Log in to Discord
 client.once('ready', () => {
+    console.log(`${client.user.tag} is online!`);
+    client.user.setPresence({
+        activities: [{ name: 'Discord bot development', type: ActivityType.Watching }],
+        status: 'online',
+    });
     console.log(`${client.user.tag} is now online and ready to use.`);
 });
 
-process.on('unhandledRejection', (error) => {
-    console.error('Unhandled promise rejection:', error);
+// Add global error handlers
+process.on('unhandledRejection', (reason, promise) => {
+    console.error('Unhandled Rejection at:', promise, 'reason:', reason);
+    logError('unhandledRejection', reason); // Optional: Log to your logger utility
 });
 
-process.on('SIGINT', () => {
-    console.log('Shutting down bot...');
-    client.destroy();
-    process.exit(0);
+process.on('uncaughtException', (error) => {
+    console.error('Uncaught Exception thrown:', error);
+    logError('uncaughtException', error); // Optional: Log to your logger utility
 });
 
-// Initialize the database
-try {
-    setupDatabase(config.dbPath);
-    console.log('Database initialized successfully.');
-} catch (error) {
-    console.error('Error initializing the database:', error);
-}
+// Add error event listener for the client
+client.on('error', errorHandler);
+client.on('shardError', errorHandler);
 
-// Login to Discord
-client.login(config.botToken);
+console.log('Loaded token:', process.env.DISCORD_TOKEN);
+
+// Start the bot
+client.login(process.env.DISCORD_TOKEN);

@@ -1,18 +1,15 @@
-const { SlashCommandBuilder } = require('discord.js');
-const { logAndReplyError } = require('../utils/errorLogger');
+const { SlashCommandBuilder } = require('@discordjs/builders');
 
 module.exports = {
     data: new SlashCommandBuilder()
         .setName('ping')
-        .setDescription('Replies with Pong! and shows bot latency.'),
+        .setDescription('Replies with Pong!'),
     async execute(interaction) {
         try {
-            const sent = await interaction.reply({ content: 'Pinging...', fetchReply: true });
-            const latency = sent.createdTimestamp - interaction.createdTimestamp;
-            const websocketPing = interaction.client.ws.ping;
-            await interaction.editReply(`Pong! Latency: ${latency}ms. Websocket: ${websocketPing}ms.`);
+            await interaction.reply('Pong!');
         } catch (error) {
-            await logAndReplyError(error, interaction);
+            console.error(error);
+            await interaction.followUp({ content: 'There was an error while executing this command.', ephemeral: true });
         }
     },
 };
