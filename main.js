@@ -4,7 +4,20 @@ const path = require('path');
 const dotenv = require('dotenv');
 
 // Load environment variables
-dotenv.config();
+dotenv.config({ path: './.env' }); // Explicitly specify the .env file path
+
+// Debug to confirm environment variables are loaded
+if (!process.env.DISCORD_TOKEN) {
+    console.error('Error: DISCORD_TOKEN is not set in the .env file.');
+    process.exit(1); // Exit the process if the token is missing
+}
+if (!process.env.CLIENT_ID) {
+    console.error('Error: CLIENT_ID is not set in the .env file.');
+    process.exit(1); // Exit the process if the client ID is missing
+}
+if (!process.env.OWNER_ID) {
+    console.warn('Warning: OWNER_ID is not set in the .env file. Certain features may not work.');
+}
 
 // Import utility modules
 const { logError } = require('./utils/logger');
@@ -28,27 +41,41 @@ client.cooldowns = new Collection();
 const commandsPath = path.join(__dirname, 'commands');
 const commandFiles = fs.readdirSync(commandsPath).filter(file => file.endsWith('.js'));
 for (const file of commandFiles) {
-    const command = require(path.join(commandsPath, file));
-    client.commands.set(command.data.name, command);
+    try {
+        const command = require(path.join(commandsPath, file));
+        client.commands.set(command.data.name, command);
+    } catch (error) {
+        console.error(`Error loading command ${file}:`, error);
+    }
 }
 
 // Load events dynamically
 const eventsPath = path.join(__dirname, 'events');
 const eventFiles = fs.readdirSync(eventsPath).filter(file => file.endsWith('.js'));
 for (const file of eventFiles) {
-    const event = require(path.join(eventsPath, file));
-    const eventName = event.name || file.split('.')[0];
-    client.on(eventName, (...args) => event.execute(...args, client));
+    try {
+        const event = require(path.join(eventsPath, file));
+        const eventName = event.name || file.split('.')[0];
+        client.on(eventName, (...args) => event.execute(...args, client));
+    } catch (error) {
+        console.error(`Error loading event ${file}:`, error);
+    }
 }
 
 // Initialize the database
-setupDatabase(process.env.DB_PATH || './database/db.sqlite');
+try {
+    setupDatabase(process.env.DB_PATH || './database/db.sqlite');
+    console.log('Database initialized successfully.');
+} catch (error) {
+    console.error('Error initializing database:', error);
+    process.exit(1); // Exit the process if the database setup fails
+}
 
-// Log in to Discord
+// Client is ready
 client.once('ready', () => {
     console.log(`${client.user.tag} is online!`);
     client.user.setPresence({
-        activities: [{ name: 'Discord bot development', type: ActivityType.Watching }],
+        activities: [{ name: 'with myself', type: ActivityType.PLAYING}],
         status: 'online',
     });
     console.log(`${client.user.tag} is now online and ready to use.`);
@@ -66,10 +93,20 @@ process.on('uncaughtException', (error) => {
 });
 
 // Add error event listener for the client
-client.on('error', errorHandler);
-client.on('shardError', errorHandler);
+client.on('error', (error) => {
+    console.error('Client error:', error);
+    logError('clientError', error);
+});
+client.on('shardError', (error) => {
+    console.error('Shard error:', error);
+    logError('shardError', error);
+});
 
-console.log('Loaded token:', process.env.DISCORD_TOKEN);
+// Debug loaded token
+console.log('Loaded token:', process.env.DISCORD_TOKEN ? 'Token exists' : 'Token missing');
 
 // Start the bot
-client.login(process.env.DISCORD_TOKEN);
+client.login(process.env.DISCORD_TOKEN).catch(error => {
+    console.error('Failed to log in:', error);
+    process.exit(1); // Exit the process if the login fails
+});
