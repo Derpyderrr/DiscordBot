@@ -1,13 +1,19 @@
 const { SlashCommandBuilder } = require('@discordjs/builders');
-const { EmbedBuilder } = require('discord.js');
+const { EmbedBuilder, PermissionsBitField } = require('discord.js');
 
 module.exports = {
     data: new SlashCommandBuilder()
         .setName('reactionroles')
-        .setDescription('Set up reaction roles'),
+        .setDescription('Set up reaction roles for this server.'),
     async execute(interaction) {
+        if (!interaction.member.permissions.has(PermissionsBitField.Flags.ManageRoles)) {
+            return interaction.reply({
+                content: 'You do not have permission to use this command.',
+                ephemeral: true,
+            });
+        }
+
         try {
-            // Step 1: Ask for the message content
             await interaction.reply('What do you want the message to be? (Type your message below or say "cancel" to stop)');
             const messageCollector = interaction.channel.createMessageCollector({
                 filter: msg => msg.author.id === interaction.user.id,
@@ -82,7 +88,7 @@ module.exports = {
                             const embed = new EmbedBuilder()
                                 .setTitle('Reaction Roles')
                                 .setDescription(reactionMessage)
-                                .setColor(null);
+                                .setColor(0x00AE86);
 
                             const sentMessage = await interaction.channel.send({ embeds: [embed] });
 
@@ -132,7 +138,7 @@ module.exports = {
  */
 function setupReactionRoleListeners(client, messageId, roleReactions) {
     client.on('messageReactionAdd', async (reaction, user) => {
-        if (reaction.message.id !== messageId) return;
+        if (reaction.message.id !== messageId || user.bot) return;
 
         const guild = reaction.message.guild;
         if (!guild) return;
@@ -143,19 +149,29 @@ function setupReactionRoleListeners(client, messageId, roleReactions) {
         const role = guild.roles.cache.find(r => r.name === roleName);
         if (!role) return;
 
-        const member = guild.members.cache.get(user.id);
+        const member = await guild.members.fetch(user.id);
         if (member) {
             try {
-                await member.roles.add(role);
-                console.log(`Added role ${roleName} to ${user.tag}`);
+                if (!member.roles.cache.has(role.id)) {
+                    await member.roles.add(role);
+                    console.log(`Added role ${roleName} to ${user.tag}`);
+                    await reaction.message.channel.send({
+                        content: `Role added to <@${user.id}>`,
+                        ephemeral: true,
+                    });
+                }
             } catch (error) {
                 console.error(`Failed to add role ${roleName} to ${user.tag}:`, error);
+                await reaction.message.channel.send({
+                    content: `Role failed for <@${user.id}>`,
+                    ephemeral: true,
+                });
             }
         }
     });
 
     client.on('messageReactionRemove', async (reaction, user) => {
-        if (reaction.message.id !== messageId) return;
+        if (reaction.message.id !== messageId || user.bot) return;
 
         const guild = reaction.message.guild;
         if (!guild) return;
@@ -166,13 +182,23 @@ function setupReactionRoleListeners(client, messageId, roleReactions) {
         const role = guild.roles.cache.find(r => r.name === roleName);
         if (!role) return;
 
-        const member = guild.members.cache.get(user.id);
+        const member = await guild.members.fetch(user.id);
         if (member) {
             try {
-                await member.roles.remove(role);
-                console.log(`Removed role ${roleName} from ${user.tag}`);
+                if (member.roles.cache.has(role.id)) {
+                    await member.roles.remove(role);
+                    console.log(`Removed role ${roleName} from ${user.tag}`);
+                    await reaction.message.channel.send({
+                        content: `Role removed from <@${user.id}>`,
+                        ephemeral: true,
+                    });
+                }
             } catch (error) {
                 console.error(`Failed to remove role ${roleName} from ${user.tag}:`, error);
+                await reaction.message.channel.send({
+                    content: `Role failed for <@${user.id}>`,
+                    ephemeral: true,
+                });
             }
         }
     });
