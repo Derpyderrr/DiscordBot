@@ -9,6 +9,7 @@ dotenv.config();
 const { setupDatabase } = require('./utils/database');
 const { logError } = require('./utils/logger');
 const { errorHandler } = require('./utils/errorHandler');
+const { setupReactionRoleListeners } = require('./commands/reactionroles.js'); // Import reaction role listeners
 
 // Create a new Discord client
 const client = new Client({
@@ -16,6 +17,8 @@ const client = new Client({
         GatewayIntentBits.Guilds,
         GatewayIntentBits.GuildMessages,
         GatewayIntentBits.MessageContent,
+        GatewayIntentBits.GuildMessageReactions, // Required for reaction roles
+        GatewayIntentBits.GuildMembers, // Required to manage roles
     ],
 });
 
@@ -55,6 +58,10 @@ client.once('ready', () => {
         activities: [{ name: 'with myself', type: ActivityType.Playing }],
         status: 'online',
     });
+
+    // Register reaction role listeners
+    setupReactionRoleListeners(client);
+    console.log('Reaction role listeners set up.');
 });
 
 // Global error handling
@@ -71,6 +78,10 @@ process.on('uncaughtException', (error) => {
 // Handle client errors
 client.on('error', errorHandler);
 client.on('shardError', errorHandler);
+
+// Add debug and warning handlers
+client.on('warn', (info) => console.warn('Warning:', info));
+client.on('debug', (info) => console.debug('Debug:', info));
 
 // Start the bot
 client.login(process.env.DISCORD_TOKEN).catch(err => {

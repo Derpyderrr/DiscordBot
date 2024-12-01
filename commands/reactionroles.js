@@ -1,11 +1,28 @@
 const { SlashCommandBuilder } = require('@discordjs/builders');
-const { EmbedBuilder, PermissionsBitField } = require('discord.js');
+const { PermissionsBitField } = require('discord.js');
 
 module.exports = {
     data: new SlashCommandBuilder()
-        .setName('reactionroles')
-        .setDescription('Set up reaction roles for this server.'),
+        .setName('rr')
+        .setDescription('Set up a reaction role for a specific message.')
+        .addStringOption(option =>
+            option.setName('message_link')
+                .setDescription('The link to the message to add the reaction role.')
+                .setRequired(true))
+        .addStringOption(option =>
+            option.setName('reaction')
+                .setDescription('The emoji to use for the reaction role.')
+                .setRequired(true))
+        .addStringOption(option =>
+            option.setName('role_name')
+                .setDescription('The name of the role to assign.')
+                .setRequired(true))
+        .addStringOption(option =>
+            option.setName('one_time_use')
+                .setDescription('Specify "Y" to make the role one-time use only.') // Optional field
+                .setRequired(false)), // Marked as optional
     async execute(interaction) {
+        // Ensure user has Manage Roles permission
         if (!interaction.member.permissions.has(PermissionsBitField.Flags.ManageRoles)) {
             return interaction.reply({
                 content: 'You do not have permission to use this command.',
@@ -13,193 +30,159 @@ module.exports = {
             });
         }
 
+        await interaction.deferReply({ ephemeral: true }); // Defer the reply
+
+        // Parse options
+        const messageLink = interaction.options.getString('message_link');
+        const reaction = interaction.options.getString('reaction');
+        const roleName = interaction.options.getString('role_name');
+        const oneTimeUse = interaction.options.getString('One-time use?') === 'Y'; // Optional flag
+
+        // Parse message link for guild, channel, and message IDs
+        const regex = /https:\/\/discord\.com\/channels\/(\d+)\/(\d+)\/(\d+)/;
+        const match = messageLink.match(regex);
+
+        if (!match) {
+            return interaction.editReply({
+                content: 'Invalid message link. Please provide a valid link.',
+            });
+        }
+
+        const [_, guildId, channelId, messageId] = match;
+
+        // Ensure message link belongs to the same guild
+        if (guildId !== interaction.guild.id) {
+            return interaction.editReply({
+                content: 'The message link must be from this server.',
+            });
+        }
+
         try {
-            await interaction.reply('What do you want the message to be? (Type your message below or say "cancel" to stop)');
-            const messageCollector = interaction.channel.createMessageCollector({
-                filter: msg => msg.author.id === interaction.user.id,
-                max: 1,
-                time: 60000,
-            });
-
-            let reactionMessage = '';
-            let roles = [];
-            let roleReactions = {};
-
-            messageCollector.on('collect', async (msg) => {
-                if (msg.content.toLowerCase() === 'cancel') {
-                    await interaction.followUp('Reaction roles setup cancelled.');
-                    return;
-                }
-
-                reactionMessage = msg.content;
-                await interaction.followUp('Message set. What roles do you want to set? (Provide role names separated by commas)');
-
-                const roleCollector = interaction.channel.createMessageCollector({
-                    filter: msg => msg.author.id === interaction.user.id,
-                    max: 1,
-                    time: 60000,
+            // Fetch the channel and message
+            const channel = await interaction.guild.channels.fetch(channelId);
+            if (!channel) {
+                return interaction.editReply({
+                    content: 'Channel not found. Ensure the bot has access to the channel.',
                 });
+            }
 
-                roleCollector.on('collect', async (roleMsg) => {
-                    if (roleMsg.content.toLowerCase() === 'cancel') {
-                        await interaction.followUp('Reaction roles setup cancelled.');
-                        return;
-                    }
-
-                    roles = roleMsg.content.split(',').map(role => role.trim());
-                    if (roles.length === 0) {
-                        await interaction.followUp('Reaction roles setup failed. No roles provided.');
-                        return;
-                    }
-
-                    await interaction.followUp(`Roles set. What reaction for ${roles[0]}?`);
-
-                    const reactionCollector = interaction.channel.createMessageCollector({
-                        filter: msg => msg.author.id === interaction.user.id,
-                        time: 60000,
-                    });
-
-                    let roleIndex = 0;
-
-                    reactionCollector.on('collect', async (reactionMsg) => {
-                        if (reactionMsg.content.toLowerCase() === 'cancel') {
-                            await interaction.followUp('Reaction roles setup cancelled.');
-                            reactionCollector.stop();
-                            return;
-                        }
-
-                        // Validate emoji
-                        if (!reactionMsg.content.match(/<:.+?:\d+>|[\uD83C-\uDBFF\uDC00-\uDFFF\u2600-\u26FF\u2700-\u27BF]+/)) {
-                            await interaction.followUp('Invalid reaction provided. Setup failed.');
-                            reactionCollector.stop();
-                            return;
-                        }
-
-                        // Map role to reaction
-                        roleReactions[reactionMsg.content] = roles[roleIndex];
-
-                        roleIndex++;
-                        if (roleIndex < roles.length) {
-                            await interaction.followUp(`Reaction set for ${roles[roleIndex - 1]}. What reaction for ${roles[roleIndex]}?`);
-                        } else {
-                            reactionCollector.stop();
-
-                            // Final Step: Create the message and add reactions
-                            const embed = new EmbedBuilder()
-                                .setTitle('Reaction Roles')
-                                .setDescription(reactionMessage)
-                                .setColor(0x00AE86);
-
-                            const sentMessage = await interaction.channel.send({ embeds: [embed] });
-
-                            // Add reactions to the message
-                            for (const reaction in roleReactions) {
-                                await sentMessage.react(reaction);
-                            }
-
-                            await interaction.followUp('Reaction roles setup complete!');
-
-                            // Listen for reactions on this message
-                            setupReactionRoleListeners(interaction.client, sentMessage.id, roleReactions);
-                        }
-                    });
-
-                    reactionCollector.on('end', (collected, reason) => {
-                        if (reason === 'time') {
-                            interaction.followUp('Reaction roles setup timed out.');
-                        }
-                    });
+            const message = await channel.messages.fetch(messageId);
+            if (!message) {
+                return interaction.editReply({
+                    content: 'Message not found. Ensure the bot has access to the message.',
                 });
+            }
 
-                roleCollector.on('end', (collected, reason) => {
-                    if (reason === 'time') {
-                        interaction.followUp('Reaction roles setup timed out.');
-                    }
+            // Validate the role
+            const role = interaction.guild.roles.cache.find(r => r.name.toLowerCase() === roleName.toLowerCase());
+            if (!role) {
+                return interaction.editReply({
+                    content: 'Something went wrong... The specified role does not exist.',
                 });
-            });
+            }
 
-            messageCollector.on('end', (collected, reason) => {
-                if (reason === 'time') {
-                    interaction.followUp('Reaction roles setup timed out.');
-                }
+            // React to the message
+            await message.react(reaction);
+
+            // Register reaction role listener
+            const reactionRolesMap = getReactionRolesMap(interaction.client);
+            if (!reactionRolesMap[message.id]) {
+                reactionRolesMap[message.id] = {};
+            }
+            reactionRolesMap[message.id][reaction] = { roleId: role.id, oneTimeUse };
+
+            // Edit the deferred reply with success message
+            return interaction.editReply({
+                content: `Reaction role successfully set! React with "${reaction}" on [this message](${messageLink}) to get the "${role.name}" role.${oneTimeUse ? ' (One-time use)' : ''}`,
             });
         } catch (error) {
-            console.error('Error in reaction roles setup:', error);
-            await interaction.followUp({ content: 'An error occurred during the setup process.', ephemeral: true });
+            console.error('Error setting up reaction role:', error);
+            return interaction.editReply({
+                content: 'Something went wrong... Please try again.',
+            });
         }
     },
 };
 
 /**
- * Sets up reaction role listeners for a given message.
+ * Retrieves the reaction roles map stored in the client's custom cache.
+ * Initializes the cache if not present.
  * @param {Client} client - The Discord client instance.
- * @param {string} messageId - The ID of the message to listen for reactions on.
- * @param {Object} roleReactions - A mapping of reactions to role names.
+ * @returns {Object} The reaction roles map.
  */
-function setupReactionRoleListeners(client, messageId, roleReactions) {
+function getReactionRolesMap(client) {
+    if (!client.reactionRolesMap) {
+        client.reactionRolesMap = {};
+    }
+    return client.reactionRolesMap;
+}
+
+/**
+ * Sets up the reaction role event listeners.
+ * @param {Client} client - The Discord client instance.
+ */
+function setupReactionRoleListeners(client) {
     client.on('messageReactionAdd', async (reaction, user) => {
-        if (reaction.message.id !== messageId || user.bot) return;
+        try {
+            if (user.bot) return;
 
-        const guild = reaction.message.guild;
-        if (!guild) return;
+            const { message } = reaction;
+            const reactionRolesMap = getReactionRolesMap(client);
+            if (!reactionRolesMap[message.id]) return;
 
-        const roleName = roleReactions[reaction.emoji.name];
-        if (!roleName) return;
+            const roleInfo = reactionRolesMap[message.id][reaction.emoji.name];
+            if (!roleInfo) return;
 
-        const role = guild.roles.cache.find(r => r.name === roleName);
-        if (!role) return;
+            const { roleId, oneTimeUse } = roleInfo;
 
-        const member = await guild.members.fetch(user.id);
-        if (member) {
-            try {
-                if (!member.roles.cache.has(role.id)) {
-                    await member.roles.add(role);
-                    console.log(`Added role ${roleName} to ${user.tag}`);
-                    await reaction.message.channel.send({
-                        content: `Role added to <@${user.id}>`,
-                        ephemeral: true,
-                    });
-                }
-            } catch (error) {
-                console.error(`Failed to add role ${roleName} to ${user.tag}:`, error);
-                await reaction.message.channel.send({
-                    content: `Role failed for <@${user.id}>`,
-                    ephemeral: true,
-                });
+            const guild = message.guild;
+            if (!guild) return;
+
+            const member = await guild.members.fetch(user.id);
+            if (!member) return;
+
+            if (!member.roles.cache.has(roleId)) {
+                await member.roles.add(roleId);
+                console.log(`Added role ${roleId} to ${user.tag}`);
             }
+        } catch (error) {
+            console.error('Error handling reaction add:', error);
         }
     });
 
     client.on('messageReactionRemove', async (reaction, user) => {
-        if (reaction.message.id !== messageId || user.bot) return;
+        try {
+            if (user.bot) return;
 
-        const guild = reaction.message.guild;
-        if (!guild) return;
+            const { message } = reaction;
+            const reactionRolesMap = getReactionRolesMap(client);
+            if (!reactionRolesMap[message.id]) return;
 
-        const roleName = roleReactions[reaction.emoji.name];
-        if (!roleName) return;
+            const roleInfo = reactionRolesMap[message.id][reaction.emoji.name];
+            if (!roleInfo) return;
 
-        const role = guild.roles.cache.find(r => r.name === roleName);
-        if (!role) return;
+            const { roleId, oneTimeUse } = roleInfo;
 
-        const member = await guild.members.fetch(user.id);
-        if (member) {
-            try {
-                if (member.roles.cache.has(role.id)) {
-                    await member.roles.remove(role);
-                    console.log(`Removed role ${roleName} from ${user.tag}`);
-                    await reaction.message.channel.send({
-                        content: `Role removed from <@${user.id}>`,
-                        ephemeral: true,
-                    });
-                }
-            } catch (error) {
-                console.error(`Failed to remove role ${roleName} from ${user.tag}:`, error);
-                await reaction.message.channel.send({
-                    content: `Role failed for <@${user.id}>`,
-                    ephemeral: true,
-                });
+            if (oneTimeUse) {
+                // Skip removing the role if one-time use is enabled
+                return;
             }
+
+            const guild = message.guild;
+            if (!guild) return;
+
+            const member = await guild.members.fetch(user.id);
+            if (!member) return;
+
+            if (member.roles.cache.has(roleId)) {
+                await member.roles.remove(roleId);
+                console.log(`Removed role ${roleId} from ${user.tag}`);
+            }
+        } catch (error) {
+            console.error('Error handling reaction remove:', error);
         }
     });
 }
+
+// Ensure the reaction role listeners are set up
+module.exports.setupReactionRoleListeners = setupReactionRoleListeners;
