@@ -1,16 +1,15 @@
-const { createLogger, format, transports } = require('winston');
+const fs = require('fs');
+const path = require('path');
 
-const logger = createLogger({
-    level: 'info',
-    format: format.combine(
-        format.timestamp(),
-        format.printf(info => `[${info.timestamp}] ${info.level.toUpperCase()}: ${info.message}`)
-    ),
-    transports: [new transports.Console()],
-});
+function logError(type, error) {
+    const logPath = path.join(__dirname, '../errors.log');
+    const errorMessage = `[${new Date().toISOString()}] ${type}: ${error}\n`;
 
-function logError(error, context) {
-    logger.error(`${context}: ${error.message}`);
+    fs.appendFile(logPath, errorMessage, (err) => {
+        if (err) {
+            console.error('Failed to write to log file:', err);
+        }
+    });
 }
 
-module.exports = { logError, logger };
+module.exports = { logError };

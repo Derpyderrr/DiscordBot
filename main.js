@@ -4,24 +4,10 @@ const path = require('path');
 const dotenv = require('dotenv');
 
 // Load environment variables
-dotenv.config({ path: './.env' }); // Explicitly specify the .env file path
+dotenv.config();
 
-// Debug to confirm environment variables are loaded
-if (!process.env.DISCORD_TOKEN) {
-    console.error('Error: DISCORD_TOKEN is not set in the .env file.');
-    process.exit(1); // Exit the process if the token is missing
-}
-if (!process.env.CLIENT_ID) {
-    console.error('Error: CLIENT_ID is not set in the .env file.');
-    process.exit(1); // Exit the process if the client ID is missing
-}
-if (!process.env.OWNER_ID) {
-    console.warn('Warning: OWNER_ID is not set in the .env file. Certain features may not work.');
-}
-
-// Import utility modules
-const { logError } = require('./utils/logger');
 const { setupDatabase } = require('./utils/database');
+const { logError } = require('./utils/logger');
 const { errorHandler } = require('./utils/errorHandler');
 
 // Create a new Discord client
@@ -37,76 +23,57 @@ const client = new Client({
 client.commands = new Collection();
 client.cooldowns = new Collection();
 
-// Load commands dynamically
+// Dynamically load commands
 const commandsPath = path.join(__dirname, 'commands');
 const commandFiles = fs.readdirSync(commandsPath).filter(file => file.endsWith('.js'));
+
 for (const file of commandFiles) {
-    try {
-        const command = require(path.join(commandsPath, file));
-        client.commands.set(command.data.name, command);
-    } catch (error) {
-        console.error(`Error loading command ${file}:`, error);
-    }
+    const command = require(path.join(commandsPath, file));
+    client.commands.set(command.data.name, command);
 }
 
-// Load events dynamically
+// Dynamically load events
 const eventsPath = path.join(__dirname, 'events');
 const eventFiles = fs.readdirSync(eventsPath).filter(file => file.endsWith('.js'));
+
 for (const file of eventFiles) {
-    try {
-        const event = require(path.join(eventsPath, file));
-        const eventName = event.name || file.split('.')[0];
-        client.on(eventName, (...args) => event.execute(...args, client));
-    } catch (error) {
-        console.error(`Error loading event ${file}:`, error);
+    const event = require(path.join(eventsPath, file));
+    if (event.once) {
+        client.once(event.name, (...args) => event.execute(...args, client));
+    } else {
+        client.on(event.name, (...args) => event.execute(...args, client));
     }
 }
 
-// Initialize the database
-try {
-    setupDatabase(process.env.DB_PATH || './database/db.sqlite');
-    console.log('Database initialized successfully.');
-} catch (error) {
-    console.error('Error initializing database:', error);
-    process.exit(1); // Exit the process if the database setup fails
-}
+// Database setup
+setupDatabase(process.env.DB_PATH || './database/db.sqlite');
 
-// Client is ready
+// Bot is ready
 client.once('ready', () => {
-    console.log(`${client.user.tag} is online!`);
+    console.log(`${client.user.tag} is online and ready!`);
     client.user.setPresence({
-        activities: [{ name: 'with myself', type: ActivityType.PLAYING}],
+        activities: [{ name: 'with myself', type: ActivityType.Playing }],
         status: 'online',
     });
-    console.log(`${client.user.tag} is now online and ready to use.`);
 });
 
-// Add global error handlers
+// Global error handling
 process.on('unhandledRejection', (reason, promise) => {
     console.error('Unhandled Rejection at:', promise, 'reason:', reason);
-    logError('unhandledRejection', reason); // Optional: Log to your logger utility
+    logError('Unhandled Rejection', reason);
 });
 
 process.on('uncaughtException', (error) => {
-    console.error('Uncaught Exception thrown:', error);
-    logError('uncaughtException', error); // Optional: Log to your logger utility
+    console.error('Uncaught Exception:', error);
+    logError('Uncaught Exception', error);
 });
 
-// Add error event listener for the client
-client.on('error', (error) => {
-    console.error('Client error:', error);
-    logError('clientError', error);
-});
-client.on('shardError', (error) => {
-    console.error('Shard error:', error);
-    logError('shardError', error);
-});
-
-// Debug loaded token
-console.log('Loaded token:', process.env.DISCORD_TOKEN ? 'Token exists' : 'Token missing');
+// Handle client errors
+client.on('error', errorHandler);
+client.on('shardError', errorHandler);
 
 // Start the bot
-client.login(process.env.DISCORD_TOKEN).catch(error => {
-    console.error('Failed to log in:', error);
-    process.exit(1); // Exit the process if the login fails
+client.login(process.env.DISCORD_TOKEN).catch(err => {
+    console.error('Failed to log in:', err);
+    logError('Login Error', err);
 });

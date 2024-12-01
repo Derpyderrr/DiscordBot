@@ -1,26 +1,16 @@
-const { createLogger, format, transports } = require('winston');
-
-// Configure logger
-const logger = createLogger({
-    level: 'error',
-    format: format.combine(
-        format.timestamp(),
-        format.errors({ stack: true }),
-        format.json()
-    ),
-    transports: [
-        new transports.Console(),
-        new transports.File({ filename: 'errors.log' }), // Logs errors to a file
-    ],
-});
-
-/**
- * Handles errors emitted by the client or shards.
- * Logs the error and prevents the bot from crashing.
- * @param {Error} error - The error to handle
- */
 function errorHandler(error) {
-    logger.error({ message: error.message, stack: error.stack });
+    console.error('An error occurred:', error);
+
+    const fs = require('fs');
+    const path = require('path');
+    const logPath = path.join(__dirname, '../errors.log');
+    const errorMessage = `[${new Date().toISOString()}] ERROR: ${error.stack || error}\n`;
+
+    fs.appendFile(logPath, errorMessage, (err) => {
+        if (err) {
+            console.error('Failed to write to log file:', err);
+        }
+    });
 }
 
 module.exports = { errorHandler };
