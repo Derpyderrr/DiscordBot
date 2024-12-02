@@ -1,27 +1,24 @@
 const { SlashCommandBuilder } = require('@discordjs/builders');
 const { EmbedBuilder } = require('discord.js');
 const fs = require('fs');
+const path = require('path');
 
 module.exports = {
     data: new SlashCommandBuilder()
         .setName('commands')
         .setDescription('List all available commands.'),
     async execute(interaction) {
-        await interaction.deferReply({ ephemeral: true });
-
         try {
-            // Read all command files in the 'commands' folder
-            const commandFiles = fs.readdirSync('./commands').filter(file => file.endsWith('.js'));
+            const commandsPath = path.join(__dirname, './');
+            const commandFiles = fs.readdirSync(commandsPath).filter(file => file.endsWith('.js'));
 
-            // Separate regular and staff-only commands
             const regularCommands = [];
             const staffCommands = [];
 
             for (const file of commandFiles) {
-                const command = require(`./${file}`);
+                const command = require(path.join(commandsPath, file));
                 if (command.data && command.data.name) {
                     const commandEntry = `\`/${command.data.name}\``;
-
                     if (command.staffOnly) {
                         staffCommands.push(commandEntry);
                     } else {
@@ -31,28 +28,24 @@ module.exports = {
             }
 
             if (regularCommands.length === 0 && staffCommands.length === 0) {
-                return interaction.editReply({
+                return interaction.reply({
                     content: 'No commands found in the command folder.',
-                    ephemeral: true,
                 });
             }
 
-            // Create the embed
             const embed = new EmbedBuilder()
                 .setTitle('Commands')
                 .setDescription('Here are all the available commands:')
-                .setColor(14493993);
+                .setColor(0x2F3136);
 
-            // Add the regular commands field if available
             if (regularCommands.length > 0) {
                 embed.addFields({
-                    name: 'Command List',
+                    name: 'Regular Commands',
                     value: regularCommands.join('\n'),
                     inline: true,
                 });
             }
 
-            // Add the staff commands field if available
             if (staffCommands.length > 0) {
                 embed.addFields({
                     name: 'Staff Commands',
@@ -61,14 +54,13 @@ module.exports = {
                 });
             }
 
-            // Send the embed
-            await interaction.editReply({ embeds: [embed] });
+            await interaction.reply({ embeds: [embed] });
         } catch (error) {
-            console.error('Error fetching commands:', error);
-            await interaction.editReply({
-                content: 'An error occurred while fetching the command list.',
-                ephemeral: true,
+            console.error('Error executing /commands:', error);
+            await interaction.reply({
+                content: 'An error occurred while fetching the commands. Please try again later.',
             });
         }
     },
+    staffOnly: false,
 };

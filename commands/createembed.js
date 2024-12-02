@@ -40,7 +40,6 @@ module.exports = {
                 .setDescription(description)
                 .setColor(color);
 
-            // Add author: Custom author if provided, or default to the bot
             if (customAuthor) {
                 embed.setAuthor({ name: customAuthor });
             } else {
@@ -83,4 +82,5 @@ module.exports = {
             });
         }
     },
+    staffOnly: true, // Staff command
 };

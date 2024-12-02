@@ -16,7 +16,7 @@ module.exports = {
             // Construct the embed
             const embed = new EmbedBuilder()
                 .setDescription(`Pong! \`${latency}ms\``)
-                .setColor(null); // Set to a hex color code for a specific color
+                .setColor(null); // Set to a hex color code for a specific color if desired
 
             // Edit the message to replace "Pinging..." with "Pong!" and the embed
             await interaction.editReply({ content: 'Pong!', embeds: [embed] });
@@ -25,4 +25,5 @@ module.exports = {
             await interaction.followUp({ content: 'There was an error while executing this command.', ephemeral: true });
         }
     },
+    staffOnly: false, // Mark this as a regular command
 };

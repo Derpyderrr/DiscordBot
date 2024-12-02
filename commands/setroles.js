@@ -83,4 +83,5 @@ module.exports = {
             return interaction.editReply('An error occurred while ensuring roles exist.');
         }
     },
+    staffOnly: true, // Staff command
 };

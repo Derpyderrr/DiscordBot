@@ -33,4 +33,5 @@ module.exports = {
             await interaction.editReply('There was an error taking the screenshot. Please try again later.');
         }
     },
+    staffOnly: false, // Mark this as a regular command
 };

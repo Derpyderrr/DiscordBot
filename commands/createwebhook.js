@@ -65,4 +65,5 @@ module.exports = {
             });
         }
     },
+    staffOnly: true, // Staff command
 };

@@ -102,6 +102,7 @@ module.exports = {
             });
         }
     },
+    staffOnly: true, // Staff-only command
 };
 
 /**
