@@ -1,15 +1,14 @@
 const fs = require('fs');
 const path = require('path');
 
-function logError(type, error) {
-    const logPath = path.join(__dirname, '../errors.log');
-    const errorMessage = `[${new Date().toISOString()}] ${type}: ${error}\n`;
+const logFile = path.join(__dirname, '../errors.log');
 
-    fs.appendFile(logPath, errorMessage, (err) => {
-        if (err) {
-            console.error('Failed to write to log file:', err);
-        }
-    });
+function logError(message, error) {
+    const timestamp = new Date().toISOString();
+    const logMessage = `[${timestamp}] ${message}: ${error}\n`;
+
+    fs.appendFileSync(logFile, logMessage);
+    console.error(message, error);
 }
 
 module.exports = { logError };

@@ -8,10 +8,9 @@ dotenv.config();
 
 const { setupDatabase } = require('./utils/database');
 const { logError } = require('./utils/logger');
-const { errorHandler } = require('./utils/errorHandler');
-const { setupReactionRoleListeners } = require('./commands/reactionroles.js'); // Import reaction role listeners
+const { errorHandler } = require('./handlers/errorHandler');
+const { setupReactionRoleListeners } = require('./commands/reactionroles.js'); // Ensure correct import
 
-// Create a new Discord client
 const client = new Client({
     intents: [
         GatewayIntentBits.Guilds,
@@ -21,6 +20,9 @@ const client = new Client({
         GatewayIntentBits.GuildMembers, // Required to manage roles
     ],
 });
+
+// Log to verify the function is imported
+console.log('setupReactionRoleListeners:', setupReactionRoleListeners);
 
 // Collections for commands and cooldowns
 client.commands = new Collection();

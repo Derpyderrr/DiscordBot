@@ -263,3 +263,59 @@
     at ChatInputCommandInteraction.reply (/Users/anthonyeichhorst/Desktop/The Man/node_modules/discord.js/src/structures/interfaces/InteractionResponses.js:105:46)
     at Object.execute (/Users/anthonyeichhorst/Desktop/The Man/events/messageCreate.js:16:31)
     at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+[2024-12-02T21:59:18.706Z] Unhandled Rejection: TypeError: setupReactionRoleListeners is not a function
+[2024-12-02T22:04:53.653Z] ERROR: DiscordAPIError[40060]: Interaction has already been acknowledged.
+    at handleErrors (/Users/anthonyeichhorst/Desktop/The Man/node_modules/@discordjs/rest/dist/index.js:727:13)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async BurstHandler.runRequest (/Users/anthonyeichhorst/Desktop/The Man/node_modules/@discordjs/rest/dist/index.js:831:23)
+    at async _REST.request (/Users/anthonyeichhorst/Desktop/The Man/node_modules/@discordjs/rest/dist/index.js:1272:22)
+    at async ChatInputCommandInteraction.reply (/Users/anthonyeichhorst/Desktop/The Man/node_modules/discord.js/src/structures/interfaces/InteractionResponses.js:115:5)
+    at async Object.execute (/Users/anthonyeichhorst/Desktop/The Man/events/messageCreate.js:16:13)
+[2024-12-02T22:05:46.758Z] ERROR: DiscordAPIError[40060]: Interaction has already been acknowledged.
+    at handleErrors (/Users/anthonyeichhorst/Desktop/The Man/node_modules/@discordjs/rest/dist/index.js:727:13)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async BurstHandler.runRequest (/Users/anthonyeichhorst/Desktop/The Man/node_modules/@discordjs/rest/dist/index.js:831:23)
+    at async _REST.request (/Users/anthonyeichhorst/Desktop/The Man/node_modules/@discordjs/rest/dist/index.js:1272:22)
+    at async ChatInputCommandInteraction.reply (/Users/anthonyeichhorst/Desktop/The Man/node_modules/discord.js/src/structures/interfaces/InteractionResponses.js:115:5)
+    at async Object.execute (/Users/anthonyeichhorst/Desktop/The Man/events/messageCreate.js:16:13)
+[2024-12-02T22:07:26.442Z] ERROR: Error [InteractionAlreadyReplied]: The reply to this interaction has already been sent or deferred.
+    at ChatInputCommandInteraction.reply (/Users/anthonyeichhorst/Desktop/The Man/node_modules/discord.js/src/structures/interfaces/InteractionResponses.js:105:46)
+    at Object.execute (/Users/anthonyeichhorst/Desktop/The Man/events/messageCreate.js:16:31)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+[2024-12-02T22:08:50.388Z] ERROR: Error [InteractionAlreadyReplied]: The reply to this interaction has already been sent or deferred.
+    at ChatInputCommandInteraction.reply (/Users/anthonyeichhorst/Desktop/The Man/node_modules/discord.js/src/structures/interfaces/InteractionResponses.js:105:46)
+    at Object.execute (/Users/anthonyeichhorst/Desktop/The Man/events/messageCreate.js:16:31)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+[2024-12-02T22:09:03.664Z] ERROR: Error [InteractionAlreadyReplied]: The reply to this interaction has already been sent or deferred.
+    at ChatInputCommandInteraction.reply (/Users/anthonyeichhorst/Desktop/The Man/node_modules/discord.js/src/structures/interfaces/InteractionResponses.js:105:46)
+    at Object.execute (/Users/anthonyeichhorst/Desktop/The Man/events/messageCreate.js:16:31)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+[2024-12-02T22:12:37.184Z] ERROR: DiscordAPIError[40060]: Interaction has already been acknowledged.
+    at handleErrors (/Users/anthonyeichhorst/Desktop/The Man/node_modules/@discordjs/rest/dist/index.js:727:13)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async BurstHandler.runRequest (/Users/anthonyeichhorst/Desktop/The Man/node_modules/@discordjs/rest/dist/index.js:831:23)
+    at async _REST.request (/Users/anthonyeichhorst/Desktop/The Man/node_modules/@discordjs/rest/dist/index.js:1272:22)
+    at async ChatInputCommandInteraction.reply (/Users/anthonyeichhorst/Desktop/The Man/node_modules/discord.js/src/structures/interfaces/InteractionResponses.js:115:5)
+    at async Object.execute (/Users/anthonyeichhorst/Desktop/The Man/events/messageCreate.js:16:13)
+[2024-12-02T22:18:27.030Z] ERROR: DiscordAPIError[40060]: Interaction has already been acknowledged.
+    at handleErrors (/Users/anthonyeichhorst/Desktop/The Man/node_modules/@discordjs/rest/dist/index.js:727:13)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async BurstHandler.runRequest (/Users/anthonyeichhorst/Desktop/The Man/node_modules/@discordjs/rest/dist/index.js:831:23)
+    at async _REST.request (/Users/anthonyeichhorst/Desktop/The Man/node_modules/@discordjs/rest/dist/index.js:1272:22)
+    at async ChatInputCommandInteraction.reply (/Users/anthonyeichhorst/Desktop/The Man/node_modules/discord.js/src/structures/interfaces/InteractionResponses.js:115:5)
+    at async Object.execute (/Users/anthonyeichhorst/Desktop/The Man/events/messageCreate.js:16:13)
+[2024-12-02T22:26:34.263Z] ERROR: DiscordAPIError[40060]: Interaction has already been acknowledged.
+    at handleErrors (/Users/anthonyeichhorst/Desktop/The Man/node_modules/@discordjs/rest/dist/index.js:727:13)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async BurstHandler.runRequest (/Users/anthonyeichhorst/Desktop/The Man/node_modules/@discordjs/rest/dist/index.js:831:23)
+    at async _REST.request (/Users/anthonyeichhorst/Desktop/The Man/node_modules/@discordjs/rest/dist/index.js:1272:22)
+    at async ChatInputCommandInteraction.reply (/Users/anthonyeichhorst/Desktop/The Man/node_modules/discord.js/src/structures/interfaces/InteractionResponses.js:115:5)
+    at async Object.execute (/Users/anthonyeichhorst/Desktop/The Man/events/interactionCreate.js:23:17)
+[2024-12-02T22:53:53.142Z] ERROR: DiscordAPIError[40060]: Interaction has already been acknowledged.
+    at handleErrors (/Users/anthonyeichhorst/Desktop/The Man/node_modules/@discordjs/rest/dist/index.js:727:13)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async BurstHandler.runRequest (/Users/anthonyeichhorst/Desktop/The Man/node_modules/@discordjs/rest/dist/index.js:831:23)
+    at async _REST.request (/Users/anthonyeichhorst/Desktop/The Man/node_modules/@discordjs/rest/dist/index.js:1272:22)
+    at async ChatInputCommandInteraction.reply (/Users/anthonyeichhorst/Desktop/The Man/node_modules/discord.js/src/structures/interfaces/InteractionResponses.js:115:5)
+    at async Object.execute (/Users/anthonyeichhorst/Desktop/The Man/events/messageCreate.js:16:13)
+[2024-12-02T23:18:39.118Z] Login Error: Error: getaddrinfo ENOTFOUND discord.com

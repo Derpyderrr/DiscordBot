@@ -19,8 +19,8 @@ module.exports = {
                 .setRequired(true))
         .addStringOption(option =>
             option.setName('one_time_use')
-                .setDescription('Specify "Y" to make the role one-time use only.') // Optional field
-                .setRequired(false)), // Marked as optional
+                .setDescription('Specify "Y" to make the role one-time use only.')
+                .setRequired(false)), // Optional field
     async execute(interaction) {
         // Ensure user has Manage Roles permission
         if (!interaction.member.permissions.has(PermissionsBitField.Flags.ManageRoles)) {
@@ -36,7 +36,7 @@ module.exports = {
         const messageLink = interaction.options.getString('message_link');
         const reaction = interaction.options.getString('reaction');
         const roleName = interaction.options.getString('role_name');
-        const oneTimeUse = interaction.options.getString('One-time use?') === 'Y'; // Optional flag
+        const oneTimeUse = interaction.options.getString('one_time_use') === 'Y'; // Optional flag
 
         // Parse message link for guild, channel, and message IDs
         const regex = /https:\/\/discord\.com\/channels\/(\d+)\/(\d+)\/(\d+)/;
@@ -102,26 +102,10 @@ module.exports = {
             });
         }
     },
-    staffOnly: true, // Staff-only command
+    staffOnly: true, // Mark this as a staff-only command
 };
 
-/**
- * Retrieves the reaction roles map stored in the client's custom cache.
- * Initializes the cache if not present.
- * @param {Client} client - The Discord client instance.
- * @returns {Object} The reaction roles map.
- */
-function getReactionRolesMap(client) {
-    if (!client.reactionRolesMap) {
-        client.reactionRolesMap = {};
-    }
-    return client.reactionRolesMap;
-}
-
-/**
- * Sets up the reaction role event listeners.
- * @param {Client} client - The Discord client instance.
- */
+// Reaction role listeners
 function setupReactionRoleListeners(client) {
     client.on('messageReactionAdd', async (reaction, user) => {
         try {
@@ -165,8 +149,7 @@ function setupReactionRoleListeners(client) {
             const { roleId, oneTimeUse } = roleInfo;
 
             if (oneTimeUse) {
-                // Skip removing the role if one-time use is enabled
-                return;
+                return; // Skip removing the role if one-time use is enabled
             }
 
             const guild = message.guild;
@@ -185,5 +168,11 @@ function setupReactionRoleListeners(client) {
     });
 }
 
-// Ensure the reaction role listeners are set up
+function getReactionRolesMap(client) {
+    if (!client.reactionRolesMap) {
+        client.reactionRolesMap = {};
+    }
+    return client.reactionRolesMap;
+}
+
 module.exports.setupReactionRoleListeners = setupReactionRoleListeners;
