@@ -1,19 +1,20 @@
+const { addXP, checkLevelUp, addCoins } = require('../utils/leveling');
+
 module.exports = {
-    name: 'interactionCreate',
-    async execute(interaction, client) {
-        if (!interaction.isCommand()) return;
+    name: 'messageCreate',
+    async execute(message) {
+        if (message.author.bot) return;
 
-        const command = client.commands.get(interaction.commandName);
+        // Add XP and Coins
+        const xpGained = 10; // Adjust this value as needed
+        const coinGained = 1;
+        await addXP(message.author.id, xpGained);
+        await addCoins(message.author.id, coinGained);
 
-        if (!command) {
-            return interaction.reply({ content: 'Command not found.', ephemeral: true });
-        }
-
-        try {
-            await command.execute(interaction);
-        } catch (error) {
-            console.error('Error executing command:', error);
-            await interaction.reply({ content: 'There was an error executing this command.', ephemeral: true });
+        // Check for level-up and role assignment
+        const leveledUp = await checkLevelUp(message.guild.id, message.author.id);
+        if (leveledUp) {
+            message.channel.send(`${message.author}, your pet leveled up!`);
         }
     },
 };

@@ -7,22 +7,18 @@ const dotenv = require('dotenv');
 dotenv.config();
 
 const { setupDatabase } = require('./utils/database');
-const { logError } = require('./utils/logger');
 const { errorHandler } = require('./handlers/errorHandler');
-const { setupReactionRoleListeners } = require('./commands/reactionroles.js'); // Ensure correct import
 
+// Create a new Discord client
 const client = new Client({
     intents: [
         GatewayIntentBits.Guilds,
         GatewayIntentBits.GuildMessages,
         GatewayIntentBits.MessageContent,
-        GatewayIntentBits.GuildMessageReactions, // Required for reaction roles
-        GatewayIntentBits.GuildMembers, // Required to manage roles
+        GatewayIntentBits.GuildMembers,
+        GatewayIntentBits.GuildMessageReactions,
     ],
 });
-
-// Log to verify the function is imported
-console.log('setupReactionRoleListeners:', setupReactionRoleListeners);
 
 // Collections for commands and cooldowns
 client.commands = new Collection();
@@ -37,6 +33,8 @@ for (const file of commandFiles) {
     client.commands.set(command.data.name, command);
 }
 
+console.log(`${commandFiles.length} commands loaded.`);
+
 // Dynamically load events
 const eventsPath = path.join(__dirname, 'events');
 const eventFiles = fs.readdirSync(eventsPath).filter(file => file.endsWith('.js'));
@@ -50,43 +48,33 @@ for (const file of eventFiles) {
     }
 }
 
-// Database setup
-setupDatabase(process.env.DB_PATH || './database/db.sqlite');
+console.log(`${eventFiles.length} events loaded.`);
 
-// Bot is ready
+// Initialize the database
+setupDatabase();
+
+// Bot ready event
 client.once('ready', () => {
     console.log(`${client.user.tag} is online and ready!`);
     client.user.setPresence({
-        activities: [{ name: 'with myself', type: ActivityType.Playing }],
+        activities: [{ name: 'with myself!', type: ActivityType.Playing }],
         status: 'online',
     });
-
-    // Register reaction role listeners
-    setupReactionRoleListeners(client);
-    console.log('Reaction role listeners set up.');
 });
 
-// Global error handling
+// Error handlers
 process.on('unhandledRejection', (reason, promise) => {
-    console.error('Unhandled Rejection at:', promise, 'reason:', reason);
-    logError('Unhandled Rejection', reason);
+    console.error('Unhandled Rejection:', promise, 'Reason:', reason);
+    errorHandler(reason);
 });
 
 process.on('uncaughtException', (error) => {
     console.error('Uncaught Exception:', error);
-    logError('Uncaught Exception', error);
+    errorHandler(error);
 });
-
-// Handle client errors
-client.on('error', errorHandler);
-client.on('shardError', errorHandler);
-
-// Add debug and warning handlers
-client.on('warn', (info) => console.warn('Warning:', info));
-client.on('debug', (info) => console.debug('Debug:', info));
 
 // Start the bot
 client.login(process.env.DISCORD_TOKEN).catch(err => {
-    console.error('Failed to log in:', err);
-    logError('Login Error', err);
+    console.error('Login failed:', err);
+    errorHandler(err);
 });

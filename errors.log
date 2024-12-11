@@ -319,3 +319,41 @@
     at async ChatInputCommandInteraction.reply (/Users/anthonyeichhorst/Desktop/The Man/node_modules/discord.js/src/structures/interfaces/InteractionResponses.js:115:5)
     at async Object.execute (/Users/anthonyeichhorst/Desktop/The Man/events/messageCreate.js:16:13)
 [2024-12-02T23:18:39.118Z] Login Error: Error: getaddrinfo ENOTFOUND discord.com
+[2024-12-03T03:43:31.628Z] ERROR: SyntaxError: "[object Object]" is not valid JSON
+    at JSON.parse (<anonymous>)
+    at Statement.<anonymous> (/Users/anthonyeichhorst/Desktop/The Man/utils/database.js:95:35)
+    at Statement.replacement (/Users/anthonyeichhorst/Desktop/The Man/node_modules/sqlite3/lib/trace.js:25:27)
+    at Statement.replacement (/Users/anthonyeichhorst/Desktop/The Man/node_modules/sqlite3/lib/trace.js:25:27)
+[2024-12-03T03:44:04.638Z] ERROR: SyntaxError: "[object Object]" is not valid JSON
+    at JSON.parse (<anonymous>)
+    at Statement.<anonymous> (/Users/anthonyeichhorst/Desktop/The Man/utils/database.js:95:35)
+    at Statement.replacement (/Users/anthonyeichhorst/Desktop/The Man/node_modules/sqlite3/lib/trace.js:25:27)
+    at Statement.replacement (/Users/anthonyeichhorst/Desktop/The Man/node_modules/sqlite3/lib/trace.js:25:27)
+[2024-12-03T04:04:44.597Z] ERROR: DiscordAPIError[40060]: Interaction has already been acknowledged.
+    at handleErrors (/Users/anthonyeichhorst/Desktop/The Man/node_modules/@discordjs/rest/dist/index.js:727:13)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async BurstHandler.runRequest (/Users/anthonyeichhorst/Desktop/The Man/node_modules/@discordjs/rest/dist/index.js:831:23)
+    at async _REST.request (/Users/anthonyeichhorst/Desktop/The Man/node_modules/@discordjs/rest/dist/index.js:1272:22)
+    at async ChatInputCommandInteraction.reply (/Users/anthonyeichhorst/Desktop/The Man/node_modules/discord.js/src/structures/interfaces/InteractionResponses.js:115:5)
+    at async Object.execute (/Users/anthonyeichhorst/Desktop/The Man/events/interactionCreate.js:23:17)
+[2024-12-03T04:04:58.716Z] ERROR: DiscordAPIError[40060]: Interaction has already been acknowledged.
+    at handleErrors (/Users/anthonyeichhorst/Desktop/The Man/node_modules/@discordjs/rest/dist/index.js:727:13)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async BurstHandler.runRequest (/Users/anthonyeichhorst/Desktop/The Man/node_modules/@discordjs/rest/dist/index.js:831:23)
+    at async _REST.request (/Users/anthonyeichhorst/Desktop/The Man/node_modules/@discordjs/rest/dist/index.js:1272:22)
+    at async ChatInputCommandInteraction.reply (/Users/anthonyeichhorst/Desktop/The Man/node_modules/discord.js/src/structures/interfaces/InteractionResponses.js:115:5)
+    at async Object.execute (/Users/anthonyeichhorst/Desktop/The Man/events/interactionCreate.js:23:17)
+[2024-12-03T04:05:19.902Z] ERROR: DiscordAPIError[40060]: Interaction has already been acknowledged.
+    at handleErrors (/Users/anthonyeichhorst/Desktop/The Man/node_modules/@discordjs/rest/dist/index.js:727:13)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async BurstHandler.runRequest (/Users/anthonyeichhorst/Desktop/The Man/node_modules/@discordjs/rest/dist/index.js:831:23)
+    at async _REST.request (/Users/anthonyeichhorst/Desktop/The Man/node_modules/@discordjs/rest/dist/index.js:1272:22)
+    at async ChatInputCommandInteraction.reply (/Users/anthonyeichhorst/Desktop/The Man/node_modules/discord.js/src/structures/interfaces/InteractionResponses.js:115:5)
+    at async Object.execute (/Users/anthonyeichhorst/Desktop/The Man/events/interactionCreate.js:23:17)
+[2024-12-03T04:06:32.896Z] ERROR: DiscordAPIError[10062]: Unknown interaction
+    at handleErrors (/Users/anthonyeichhorst/Desktop/The Man/node_modules/@discordjs/rest/dist/index.js:727:13)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async BurstHandler.runRequest (/Users/anthonyeichhorst/Desktop/The Man/node_modules/@discordjs/rest/dist/index.js:831:23)
+    at async _REST.request (/Users/anthonyeichhorst/Desktop/The Man/node_modules/@discordjs/rest/dist/index.js:1272:22)
+    at async ChatInputCommandInteraction.reply (/Users/anthonyeichhorst/Desktop/The Man/node_modules/discord.js/src/structures/interfaces/InteractionResponses.js:115:5)
+    at async Object.execute (/Users/anthonyeichhorst/Desktop/The Man/events/interactionCreate.js:23:17)
